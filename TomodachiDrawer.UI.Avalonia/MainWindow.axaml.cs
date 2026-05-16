@@ -22,8 +22,6 @@ namespace TomodachiDrawer.UI.Avalonia;
 
 public partial class MainWindow : Window
 {
-    private const string SettingsFilePath = "settings.json";
-
     private string _currentImagePath = string.Empty;
     private readonly CancellationTokenSource _cts = new();
 
@@ -763,19 +761,43 @@ public partial class MainWindow : Window
 #endif
     };
 
+    private string GetSettingsFilePath()
+    {
+        const string settingsFileName = "settings.json";
+#if DEBUG
+        return settingsFileName;
+#else
+        if (OperatingSystem.IsMacOS())
+        {
+            var appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TomodachiDrawer");
+            if (!Directory.Exists(appDataFolder))
+            {
+                Directory.CreateDirectory(appDataFolder);
+            }
+            return Path.Combine(appDataFolder, settingsFileName);
+        }
+        else
+        {
+            return settingsFileName;
+        }
+#endif
+    }
+
     private void SaveSettings()
     {
         var json = JsonSerializer.Serialize(_currentSettings, _jsonOptions);
-        File.WriteAllText(SettingsFilePath, json);
+        File.WriteAllText(GetSettingsFilePath(), json);
     }
 
     private void GetSettings()
     {
-        if (File.Exists(SettingsFilePath))
+        var settingsFilePath =  GetSettingsFilePath();
+        
+        if (File.Exists(settingsFilePath))
         {
             try
             {
-                var json = File.ReadAllText(SettingsFilePath);
+                var json = File.ReadAllText(settingsFilePath);
                 var settings = JsonSerializer.Deserialize<AppSettings>(json);
 
                 if (settings != null)
