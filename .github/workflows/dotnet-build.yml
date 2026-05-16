@@ -79,10 +79,8 @@ jobs:
         mkdir final-packages
         for dir in unzipped-artifacts/*/; do
           dirname=$(basename "$dir")
-          outname="${dirname//osx/mac}"
-          
           cd "$dir"
-          echo "Processing ${dirname} into ${outname}"
+          echo "Zipping/Tarring ${dirname}"
           
           if [[ "$dirname" == *"osx"* ]]; then
             echo "Mac .tar.gz"
@@ -93,12 +91,10 @@ jobs:
             echo "Linux .tar.gz"
             chmod +x TomodachiDrawer.UI.Avalonia
             tar -czvf "../../final-packages/${outname}-${{ github.ref_name }}.tar.gz" *
-            
           else
             echo "Windows .zip"
             zip -r "../../final-packages/${outname}-${{ github.ref_name }}.zip" .
           fi
-          
           cd ../..
         done
     - name: Create release draft
