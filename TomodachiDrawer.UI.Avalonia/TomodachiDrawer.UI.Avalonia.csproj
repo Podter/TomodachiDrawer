@@ -51,7 +51,7 @@
       <PublishFiles Include="$(PublishDir)**\*.*" Exclude="$(AppBundleDir)\**\*.*" />
     </ItemGroup>
     <MakeDir Directories="$(AppBundleDir);$(ContentsDir);$(MacOsDir);$(ResourcesDir)" />
-    <Copy SourceFiles="@(PublishFiles)" DestinationFolder="$(MacOsDir)\%(RecursiveDir)" />
+    <Move SourceFiles="@(PublishFiles)" DestinationFolder="$(MacOsDir)\%(RecursiveDir)" />
     <Copy SourceFiles="$(ProjectDir)Packaging/macOS/AppIcon.icns" DestinationFolder="$(ResourcesDir)" />
     <PropertyGroup>
       <PlistSource>$(ProjectDir)Packaging/macOS/Info.plist</PlistSource>
