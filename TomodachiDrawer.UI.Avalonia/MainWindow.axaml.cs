@@ -22,8 +22,8 @@ namespace TomodachiDrawer.UI.Avalonia;
 
 public partial class MainWindow : Window
 {
-    private const string SettingsFilePath = "settings.json";
-
+    private const string firmwareFileName = "TomodachiDrawer.Firmware.uf2";
+    
     private string _currentImagePath = string.Empty;
     private readonly CancellationTokenSource _cts = new();
 
@@ -612,12 +612,29 @@ public partial class MainWindow : Window
         SetEstimate(totalTime);
     }
 
+    private string GetBaseFirmwareFilePath()
+    {
+#if DEBUG
+        return firmwareFileName;
+#else
+        var baseDirectory = AppContext.BaseDirectory;
+        if (OperatingSystem.IsMacOS() && baseDirectory.Contains(".app/Contents/MacOS"))
+        {
+            return Path.Combine(baseDirectory, firmwareFileName);
+        }
+        else
+        {
+            return firmwareFileName;
+        }
+#endif
+    }
+
     private void FlashFirmwareButton_Click(object? sender, RoutedEventArgs e)
     {
-        const string firmwareFile = "TomodachiDrawer.Firmware.uf2";
+        var firmwareFilePath = GetBaseFirmwareFilePath();
         var drivePath = UF2Flasher.FindRP2040Drive();
 
-        if (!File.Exists(firmwareFile))
+        if (!File.Exists(firmwareFilePath))
         {
             _ = ShowMessageAsync(
                 "Error flashing base firmware",
@@ -633,7 +650,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        File.Copy(firmwareFile, Path.Combine(drivePath, firmwareFile), overwrite: true);
+        File.Copy(firmwareFilePath, Path.Combine(drivePath, firmwareFileName), overwrite: true);
 
         var timeout = System.DateTime.Now.AddSeconds(10);
         while (UF2Flasher.FindRP2040Drive() != null)
@@ -763,19 +780,43 @@ public partial class MainWindow : Window
 #endif
     };
 
+    private string GetSettingsFilePath()
+    {
+        const string settingsFileName = "settings.json";
+#if DEBUG
+        return settingsFileName;
+#else
+        if (OperatingSystem.IsMacOS())
+        {
+            var appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TomodachiDrawer");
+            if (!Directory.Exists(appDataFolder))
+            {
+                Directory.CreateDirectory(appDataFolder);
+            }
+            return Path.Combine(appDataFolder, settingsFileName);
+        }
+        else
+        {
+            return settingsFileName;
+        }
+#endif
+    }
+
     private void SaveSettings()
     {
         var json = JsonSerializer.Serialize(_currentSettings, _jsonOptions);
-        File.WriteAllText(SettingsFilePath, json);
+        File.WriteAllText(GetSettingsFilePath(), json);
     }
 
     private void GetSettings()
     {
-        if (File.Exists(SettingsFilePath))
+        var settingsFilePath =  GetSettingsFilePath();
+        
+        if (File.Exists(settingsFilePath))
         {
             try
             {
-                var json = File.ReadAllText(SettingsFilePath);
+                var json = File.ReadAllText(settingsFilePath);
                 var settings = JsonSerializer.Deserialize<AppSettings>(json);
 
                 if (settings != null)
