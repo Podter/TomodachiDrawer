@@ -81,6 +81,8 @@ jobs:
           dirname=$(basename "$dir")
           cd "$dir"
           echo "Zipping/Tarring ${dirname}"
+
+          outname="${dirname//osx/mac}"
           
           if [[ "$dirname" == *"osx"* ]]; then
             echo "Mac .tar.gz"
